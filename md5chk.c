@@ -27,7 +27,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
- * Revision 1.2  2006-07-25 21:31:21  tino
+ * Revision 1.3  2006-07-25 21:54:22  tino
+ * See ChangeLog
+ *
+ * Revision 1.2  2006/07/25 21:31:21  tino
  * Added commandline usage (files and -q)
  *
  * Revision 1.1  2006/07/25 20:56:18  tino
@@ -42,6 +45,7 @@
 
 static unsigned char	tchar;
 static int		nflag, unbuffered, quiet;
+static int		ignore, errs;
 
 static void
 md5read(FILE *fd, char digest[15])
@@ -121,11 +125,20 @@ md5chk(void)
     md5(name);
 }
 
+static void
+verror_fn(const char *prefix, const char *s, va_list list, int err)
+{
+  errs	= 1;
+  if (!ignore)
+    tino_verror_std(prefix, s, list, err);
+}
+
 int
 main(int argc, char **argv)
 {
   int		argn;
 
+  tino_verror_fn	= verror_fn;
   argn	= tino_getopt(argc, argv, 0, -1,
 		      TINO_GETOPT_VERSION(MD5CHK_VERSION)
 		      " [files..]",
@@ -143,6 +156,10 @@ main(int argc, char **argv)
 		      "t	line termination character, default whitespace\n"
 		      "		Note: -t defaults to NUL if -n present."
 		      , &tchar,
+
+		      TINO_GETOPT_FLAG
+		      "i	ignore errors silently"
+		      , &ignore,
 
 		      TINO_GETOPT_FLAG
 		      "q	quiet mode: do not print file names"
@@ -163,5 +180,5 @@ main(int argc, char **argv)
     while (++argn<argc);
   else
     md5chk();
-  return 0;
+  return errs;
 }

@@ -1,0 +1,7 @@
+2006-07-25    <tino@firebird.03.softkill.net>
+
+	* DESCRIPTION: typos corrected and a little bit clarified
+
+	* md5chk.c (verror_fn): added
+	(main): errors now change the return value
+

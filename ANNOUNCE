@@ -1,1 +1,3 @@
-First version.  It works.
+Return value (0 if everything ok, else 1) and suppress of error output added.
+
+Well well ..  If you are once running, it's hard to stop ;)

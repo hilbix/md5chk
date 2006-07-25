@@ -2,7 +2,10 @@ Create md5sum from files for easy shell usage
 # $Header$
 #
 # $Log$
-# Revision 1.2  2006-07-25 21:31:33  tino
+# Revision 1.3  2006-07-25 21:54:22  tino
+# See ChangeLog
+#
+# Revision 1.2  2006/07/25 21:31:33  tino
 # release 0.0.0
 #
 # Revision 1.1  2006/07/25 20:56:18  tino
@@ -20,11 +23,11 @@ The problem is that the $b then starts with a * and you don't know
 what happens if the filename contains nonstarndard characters like LF.
 Some md5sum dialects just create garbage, others escape the MD5 sum.
 
-md5chk doesn't do this and was designed from groud up for bash usage.
+md5chk doesn't do this and was designed from ground up for bash usage.
 It guarantees that the md5 sum always is "clean" and the filename
 always is properly escaped for shell reads.  Note that there is no way
 for shell reads to express the newline character nor spaces at the end
-of an argument.  So a second escape path must be done, sorry.
+of an argument.  So an unescape via ANSI strings must be done, sorry.
 
 <pre>find . -type f -print0 |
 md5chk -n |
@@ -33,4 +36,8 @@ do
 	eval name="\$\'$name\'"
 	...</pre>
 
-Note that the escape entirely runs in the shell and thus is very fast.
+Note that the "eval" line does the escape entirely runs in the shell
+and thus is very fast.
+
+Another common usage is "create md5 string from a filename":
+<pre>var="`md5chk -iq "$name"`"; echo $?</pre>
