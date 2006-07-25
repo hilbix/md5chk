@@ -27,9 +27,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
- * Revision 1.1  2006-07-25 20:56:18  tino
- * First version
+ * Revision 1.2  2006-07-25 21:31:21  tino
+ * Added commandline usage (files and -q)
  *
+ * Revision 1.1  2006/07/25 20:56:18  tino
+ * First version
  */
 
 #include "tino/getopt.h"
@@ -39,7 +41,7 @@
 #include "md5chk_version.h"
 
 static unsigned char	tchar;
-static int		nflag, unbuffered;
+static int		nflag, unbuffered, quiet;
 
 static void
 md5read(FILE *fd, char digest[15])
@@ -98,8 +100,11 @@ md5(const char *name)
     }
   for (i=0; i<sizeof digest; i++)
     printf("%02x", digest[i]);
-  printf(" ");
-  shellescapename(name);
+  if (!quiet)
+    {
+      printf(" ");
+      shellescapename(name);
+    }
   printf("\n");
   if (unbuffered)
     fflush(stdout);
@@ -121,9 +126,9 @@ main(int argc, char **argv)
 {
   int		argn;
 
-  argn	= tino_getopt(argc, argv, 0, 0,
+  argn	= tino_getopt(argc, argv, 0, -1,
 		      TINO_GETOPT_VERSION(MD5CHK_VERSION)
-		      "",
+		      " [files..]",
 
 		      TINO_GETOPT_USAGE
 		      "h	this help"
@@ -140,6 +145,10 @@ main(int argc, char **argv)
 		      , &tchar,
 
 		      TINO_GETOPT_FLAG
+		      "q	quiet mode: do not print file names"
+		      , &quiet,
+
+		      TINO_GETOPT_FLAG
 		      "u	unbuffered output"
 		      , &unbuffered,
 
@@ -148,6 +157,11 @@ main(int argc, char **argv)
   if (argn<=0)
     return 1;
   
-  md5chk();
+  if (argn<argc)
+    do
+      md5(argv[argn]);
+    while (++argn<argc);
+  else
+    md5chk();
   return 0;
 }
