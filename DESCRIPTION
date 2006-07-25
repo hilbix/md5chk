@@ -1,10 +1,12 @@
-Create md5sum from files piped from stdin
+Create md5sum from files for easy shell usage
 # $Header$
 #
 # $Log$
-# Revision 1.1  2006-07-25 20:56:18  tino
-# First version
+# Revision 1.2  2006-07-25 21:31:33  tino
+# release 0.0.0
 #
+# Revision 1.1  2006/07/25 20:56:18  tino
+# First version
 
 Sometimes you want to pipe a list of files to md5sum.  This then looks
 like
