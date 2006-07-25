@@ -1,0 +1,34 @@
+Create md5sum from files piped from stdin
+# $Header$
+#
+# $Log$
+# Revision 1.1  2006-07-25 20:56:18  tino
+# First version
+#
+
+Sometimes you want to pipe a list of files to md5sum.  This then looks
+like
+
+<pre>find . -type f -print0 |
+xargs --null md5sum -b -- |
+while read a b
+do ...</pre>
+
+The problem is that the $b then starts with a * and you don't know
+what happens if the filename contains nonstarndard characters like LF.
+Some md5sum dialects just create garbage, others escape the MD5 sum.
+
+md5chk doesn't do this and was designed from groud up for bash usage.
+It guarantees that the md5 sum always is "clean" and the filename
+always is properly escaped for shell reads.  Note that there is no way
+for shell reads to express the newline character nor spaces at the end
+of an argument.  So a second escape path must be done, sorry.
+
+<pre>find . -type f -print0 |
+md5chk -n |
+while read -r md5 name
+do
+	eval name="\$\'$name\'"
+	...</pre>
+
+Note that the escape entirely runs in the shell and thus is very fast.

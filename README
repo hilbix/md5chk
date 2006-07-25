@@ -1,0 +1,18 @@
+$Header$
+
+Compile:
+	make
+
+Usage:
+	md5chk -h
+
+About:
+	see file DESCRIPTION
+
+-Tino
+webmaster@scylla-charybdis.com
+http://www.scylla-charybdis.com/tool.php?tool=md5chk
+$Log$
+Revision 1.1  2006-07-25 20:56:18  tino
+First version
+
