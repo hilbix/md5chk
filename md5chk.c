@@ -6,7 +6,7 @@
  * md5chk -n |
  * while read -r md5 name
  * do
- *	eval name="\$\'$name\'"
+ *	eval name="\$'$name'"
  *	...
  * done
  *
@@ -27,7 +27,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
- * Revision 1.3  2006-07-25 21:54:22  tino
+ * Revision 1.4  2006-07-31 21:24:06  tino
+ * Documentation clarified (was buggy) and help (-h) improved
+ *
+ * Revision 1.3  2006/07/25 21:54:22  tino
  * See ChangeLog
  *
  * Revision 1.2  2006/07/25 21:31:21  tino
@@ -141,14 +144,27 @@ main(int argc, char **argv)
   tino_verror_fn	= verror_fn;
   argn	= tino_getopt(argc, argv, 0, -1,
 		      TINO_GETOPT_VERSION(MD5CHK_VERSION)
-		      " [files..]",
+		      " [files..]\n"
+		      "Prototype 1:\n"
+		      "\tif md5=\"`md5chk -iq \"$name\"`\"; then ...\n"
+		      "Prototype 2:\n"
+		      "\tfind . -type f | ./md5chk -t10\n"
+		      "Prototype 3:\n"
+		      "\tfind . -type f -print0 |\n"
+		      "\t%s -n |\n"
+		      "\twhile read -r md5 name\n"
+		      "\tdo\n"
+		      "\t\teval name=\"\\$\'$name\'\"\n"
+		      "\t\t...\n"
+		      "\tdone"
+		      ,
 
 		      TINO_GETOPT_USAGE
 		      "h	this help"
 		      ,
 
 		      TINO_GETOPT_FLAG
-		      "n	read NUL terminated lines (else -t default to whitespace)\n"
+		      "n	read NUL terminated lines\n"
 		      "		Note that NUL always acts as line terminator."
 		      , &nflag,
 

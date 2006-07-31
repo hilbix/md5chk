@@ -2,7 +2,10 @@ Create md5sum from files for easy shell usage
 # $Header$
 #
 # $Log$
-# Revision 1.3  2006-07-25 21:54:22  tino
+# Revision 1.4  2006-07-31 21:24:05  tino
+# Documentation clarified (was buggy) and help (-h) improved
+#
+# Revision 1.3  2006/07/25 21:54:22  tino
 # See ChangeLog
 #
 # Revision 1.2  2006/07/25 21:31:33  tino
@@ -33,11 +36,11 @@ of an argument.  So an unescape via ANSI strings must be done, sorry.
 md5chk -n |
 while read -r md5 name
 do
-	eval name="\$\'$name\'"
+	eval name="\$'$name'"
 	...</pre>
 
 Note that the "eval" line does the escape entirely runs in the shell
 and thus is very fast.
 
 Another common usage is "create md5 string from a filename":
-<pre>var="`md5chk -iq "$name"`"; echo $?</pre>
+<pre>md5="`md5chk -iq "$name"`"; echo $?</pre>
