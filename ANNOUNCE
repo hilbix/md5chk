@@ -3,3 +3,6 @@ Corrected version.
 Previous versions printed 1 byte too few HEX output, sigh.
 
 <b>DO NOT USE PREVIOUS VERSIONS!</b>
+
+This has been tested to work now:
+<pre>./md5chk md5chk | sed 's/ / */' | md5sum --check</pre>
