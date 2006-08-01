@@ -27,7 +27,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
- * Revision 1.4  2006-07-31 21:24:06  tino
+ * Revision 1.5  2006-08-01 00:18:27  tino
+ * The MD5 digest was printed 1 byte too short, WHOOPS.
+ *
+ * Revision 1.4  2006/07/31 21:24:06  tino
  * Documentation clarified (was buggy) and help (-h) improved
  *
  * Revision 1.3  2006/07/25 21:54:22  tino
@@ -51,7 +54,7 @@ static int		nflag, unbuffered, quiet;
 static int		ignore, errs;
 
 static void
-md5read(FILE *fd, char digest[15])
+md5read(FILE *fd, char digest[16])
 {
   tino_MD5_CTX	ctx;
   char		data[BUFSIZ*10];
@@ -84,7 +87,7 @@ shellescapename(const char *s)
 static void
 md5(const char *name)
 {
-  unsigned char	digest[15];
+  unsigned char	digest[16];
   int		i;
   FILE		*fd;
 
