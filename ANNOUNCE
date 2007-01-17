@@ -1,8 +1,7 @@
-Corrected version.
+Added options -d and -s
 
-Previous versions printed 1 byte too few HEX output, sigh.
+-d is to directly create MD5 sums from strings given as arguments.
+If no arguments are present, lines are read from stdin.
 
-<b>DO NOT USE PREVIOUS VERSIONS!</b>
-
-This has been tested to work now:
-<pre>./md5chk md5chk | sed 's/ / */' | md5sum --check</pre>
+-s enables '-' as file argument, too.  If no argument is given, the
+MD5 sum of the data read from stdin is printed.

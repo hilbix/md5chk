@@ -10,7 +10,7 @@
  *	...
  * done
  *
- * Copyright (C)2006 Valentin Hilbig, webmaster@scylla-charybdis.com
+ * Copyright (C)2006-2007 Valentin Hilbig <webmaster@scylla-charybdis.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
- * Revision 1.5  2006-08-01 00:18:27  tino
+ * Revision 1.6  2007-01-17 01:19:12  tino
+ * Options -s and -d
+ *
+ * Revision 1.5  2006/08/01 00:18:27  tino
  * The MD5 digest was printed 1 byte too short, WHOOPS.
  *
  * Revision 1.4  2006/07/31 21:24:06  tino
@@ -50,7 +53,7 @@
 #include "md5chk_version.h"
 
 static unsigned char	tchar;
-static int		nflag, unbuffered, quiet;
+static int		nflag, unbuffered, quiet, stdinflag, direct;
 static int		ignore, errs;
 
 static void
@@ -91,22 +94,29 @@ md5(const char *name)
   int		i;
   FILE		*fd;
 
-  if ((fd=fopen(name, "rb"))==NULL)
+  if (direct)
+    tino_md5_bin(digest, name, strlen(name));
+  else
     {
-      tino_err("cannot open: %s", name);
-      return;
-    }
-  md5read(fd, digest);
-  if (ferror(fd))
-    {
-      tino_err("read error: %s", name);
-      fclose(fd);
-      return;
-    }
-  if (fclose(fd))
-    {
-      tino_err("cannot close: %s", name);
-      return;
+      if (stdinflag && !strcmp(name, "-"))
+	fd	= stdin;
+      else if ((fd=fopen(name, "rb"))==NULL)
+	{
+	  tino_err("cannot open: %s", name);
+	  return;
+	}
+      md5read(fd, digest);
+      if (ferror(fd))
+	{
+	  tino_err("read error: %s", name);
+	  fclose(fd);
+	  return;
+	}
+      if (fclose(fd))
+	{
+	  tino_err("cannot close: %s", name);
+	  return;
+	}
     }
   for (i=0; i<sizeof digest; i++)
     printf("%02x", digest[i]);
@@ -126,13 +136,18 @@ md5chk(void)
   TINO_BUF	buf;
   const char	*name;
 
+  if (stdinflag)
+    {
+      md5("-");
+      return;
+    }
   tino_buf_init(&buf);
   while ((name=tino_buf_line_read(&buf, 0, tchar ? tchar : nflag ? 0 : -1))!=0)
     md5(name);
 }
 
 static void
-verror_fn(const char *prefix, const char *s, va_list list, int err)
+verror_fn(const char *prefix, const char *s, TINO_VA_LIST list, int err)
 {
   errs	= 1;
   if (!ignore)
@@ -148,6 +163,9 @@ main(int argc, char **argv)
   argn	= tino_getopt(argc, argv, 0, -1,
 		      TINO_GETOPT_VERSION(MD5CHK_VERSION)
 		      " [files..]\n"
+		      "Prototype 0:\n"
+		      "\tmd5chk -d 'string1' 'string2'\n"
+		      "\techo test | md5chk -s\n"
 		      "Prototype 1:\n"
 		      "\tif md5=\"`md5chk -iq \"$name\"`\"; then ...\n"
 		      "Prototype 2:\n"
@@ -165,6 +183,15 @@ main(int argc, char **argv)
 		      TINO_GETOPT_USAGE
 		      "h	this help"
 		      ,
+
+		      TINO_GETOPT_FLAG
+		      "d	Do md5sum of commandline args or lines from stdin"
+		      , &direct,
+
+		      TINO_GETOPT_FLAG
+		      "s	read data from stdin instead, not a file list\n"
+		      "		Enables '-' as file argument for stdin, too."
+		      , &stdinflag,
 
 		      TINO_GETOPT_FLAG
 		      "n	read NUL terminated lines\n"
@@ -192,7 +219,11 @@ main(int argc, char **argv)
 
   if (argn<=0)
     return 1;
-  
+  if (stdinflag && direct)
+    {
+      tino_err("Warning: Options -d and -s together makes no sense");
+      return 1;
+    }
   if (argn<argc)
     do
       md5(argv[argn]);

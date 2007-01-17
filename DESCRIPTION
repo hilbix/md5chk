@@ -1,8 +1,11 @@
-Create md5sum from files for easy shell usage
+Create md5sums for easy shell usage
 # $Header$
 #
 # $Log$
-# Revision 1.4  2006-07-31 21:24:05  tino
+# Revision 1.5  2007-01-17 01:19:12  tino
+# Options -s and -d
+#
+# Revision 1.4  2006/07/31 21:24:05  tino
 # Documentation clarified (was buggy) and help (-h) improved
 #
 # Revision 1.3  2006/07/25 21:54:22  tino
@@ -42,5 +45,8 @@ do
 Note that the "eval" line does the escape entirely runs in the shell
 and thus is very fast.
 
-Another common usage is "create md5 string from a filename":
+Another common usage is "create md5 string from a file":
 <pre>md5="`md5chk -iq "$name"`"; echo $?</pre>
+
+Now you can create an md5sum from argument directly, too:
+<pre>md5="`md5chk -dq "$string"`"</pre>

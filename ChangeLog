@@ -1,3 +1,9 @@
+2007-01-17    <tino@firebird.03.softkill.net>
+
+	* md5chk.c (md5chk): stdin method added
+	(md5): direct and stdin support added
+	(main): two new options: -d and -s
+
 2006-07-25    <tino@firebird.03.softkill.net>
 
 	* DESCRIPTION: typos corrected and a little bit clarified
