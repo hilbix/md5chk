@@ -10,7 +10,7 @@
  *	...
  * done
  *
- * Copyright (C)2006-2007 Valentin Hilbig <webmaster@scylla-charybdis.com>
+ * Copyright (C)2006-2008 Valentin Hilbig <webmaster@scylla-charybdis.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
+ * Revision 1.7  2008-02-07 01:55:23  tino
+ * Option -z and minor bugfix
+ *
  * Revision 1.6  2007-01-17 01:19:12  tino
  * Options -s and -d
  *
@@ -36,44 +39,40 @@
  * Revision 1.4  2006/07/31 21:24:06  tino
  * Documentation clarified (was buggy) and help (-h) improved
  *
- * Revision 1.3  2006/07/25 21:54:22  tino
- * See ChangeLog
- *
  * Revision 1.2  2006/07/25 21:31:21  tino
  * Added commandline usage (files and -q)
- *
- * Revision 1.1  2006/07/25 20:56:18  tino
- * First version
  */
 
+#define TINO_NEED_OLD_ERR_FN
+
+#include "tino/buf_line.h"
 #include "tino/getopt.h"
 #include "tino/md5.h"
-#include "tino/buf_line.h"
 
 #include "md5chk_version.h"
 
 static unsigned char	tchar;
-static int		nflag, unbuffered, quiet, stdinflag, direct;
+static int		nflag, unbuffered, quiet, stdinflag, direct, zero;
 static int		ignore, errs;
 
 static void
-md5read(FILE *fd, char digest[16])
+md5read(FILE *fd, unsigned char digest[16])
 {
-  tino_MD5_CTX	ctx;
+  tino_md5_ctx	ctx;
   char		data[BUFSIZ*10];
   int		got;
 
-  tino_MD5Init(&ctx);
+  tino_md5_init(&ctx);
   while ((got=fread(data, 1, sizeof data, fd))>0)
-    tino_MD5Update(&ctx, data, got);
-  tino_MD5Final(digest, &ctx);
+    tino_md5_update(&ctx, data, got);
+  tino_md5_final(&ctx, digest);
 }
 
 static void
 shellescapename(const char *s)
 {
   for (; *s; s++)
-    if (*s<33)
+    if (((signed char)*s)<33)
       printf("\\%03o", (unsigned char)*s);
     else
       switch (*s)
@@ -95,7 +94,7 @@ md5(const char *name)
   FILE		*fd;
 
   if (direct)
-    tino_md5_bin(digest, name, strlen(name));
+    tino_md5_bin(name, strlen(name), digest);
   else
     {
       if (stdinflag && !strcmp(name, "-"))
@@ -123,9 +122,15 @@ md5(const char *name)
   if (!quiet)
     {
       printf(" ");
-      shellescapename(name);
+      if (zero)
+	printf("%s", name);
+      else
+	shellescapename(name);
     }
-  printf("\n");
+  if (zero)
+    putchar(0);
+  else
+    putchar('\n');
   if (unbuffered)
     fflush(stdout);
 }
@@ -141,17 +146,17 @@ md5chk(void)
       md5("-");
       return;
     }
-  tino_buf_init(&buf);
+  tino_buf_initO(&buf);
   while ((name=tino_buf_line_read(&buf, 0, tchar ? tchar : nflag ? 0 : -1))!=0)
     md5(name);
 }
 
 static void
-verror_fn(const char *prefix, const char *s, TINO_VA_LIST list, int err)
+verror_fn(const char *prefix, TINO_VA_LIST list, int err)
 {
   errs	= 1;
   if (!ignore)
-    tino_verror_std(prefix, s, list, err);
+    tino_verror_std(prefix, list, err);
 }
 
 int
@@ -208,12 +213,16 @@ main(int argc, char **argv)
 		      , &ignore,
 
 		      TINO_GETOPT_FLAG
-		      "q	quiet mode: do not print file names"
+		      "q	quiet mode: do not print (shell escaped) file names"
 		      , &quiet,
 
 		      TINO_GETOPT_FLAG
 		      "u	unbuffered output"
 		      , &unbuffered,
+
+		      TINO_GETOPT_FLAG
+		      "z	write NUL(\"zero\") terminated lines, disables shell escape"
+		      , &zero,
 
 		      NULL);
 

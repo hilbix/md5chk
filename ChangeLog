@@ -1,3 +1,12 @@
+2008-02-07  Valentin Hilbig  <tino@firebird.03.softkill.net>
+
+	* md5chk.c (md5): Option -z added and updated to current lib
+
+2007-10-03  Valentin Hilbig  <tino@firebird.03.softkill.net>
+
+	* md5chk.c (shellescapename): using signed char, as char can be
+	unsigned according to C99.
+
 2007-01-17    <tino@firebird.03.softkill.net>
 
 	* md5chk.c (md5chk): stdin method added

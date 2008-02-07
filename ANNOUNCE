@@ -1,7 +1,7 @@
-Added options -d and -s
+Minor bug removed and option -z added
 
--d is to directly create MD5 sums from strings given as arguments.
-If no arguments are present, lines are read from stdin.
+char can be unsigned on some platforms.  However I doubt this code
+will it ever make to such platforms ever ;)
 
--s enables '-' as file argument, too.  If no argument is given, the
-MD5 sum of the data read from stdin is printed.
+Option z is to write NUL terminated lines (companion to reading NUL
+terminated lines).
