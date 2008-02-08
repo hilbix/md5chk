@@ -1,7 +1,2 @@
-Minor bug removed and option -z added
+Options in help output sorted
 
-char can be unsigned on some platforms.  However I doubt this code
-will it ever make to such platforms ever ;)
-
-Option z is to write NUL terminated lines (companion to reading NUL
-terminated lines).

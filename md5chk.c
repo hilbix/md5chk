@@ -27,6 +27,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
+ * Revision 1.8  2008-02-08 02:38:04  tino
+ * Help options sorted
+ *
  * Revision 1.7  2008-02-07 01:55:23  tino
  * Option -z and minor bugfix
  *
@@ -194,27 +197,27 @@ main(int argc, char **argv)
 		      , &direct,
 
 		      TINO_GETOPT_FLAG
-		      "s	read data from stdin instead, not a file list\n"
-		      "		Enables '-' as file argument for stdin, too."
-		      , &stdinflag,
+		      "i	ignore errors silently"
+		      , &ignore,
 
 		      TINO_GETOPT_FLAG
 		      "n	read NUL terminated lines\n"
 		      "		Note that NUL always acts as line terminator."
 		      , &nflag,
 
+		      TINO_GETOPT_FLAG
+		      "q	quiet mode: do not print (shell escaped) file names"
+		      , &quiet,
+
+		      TINO_GETOPT_FLAG
+		      "s	read data from stdin instead, not a file list\n"
+		      "		Enables '-' as file argument for stdin, too."
+		      , &stdinflag,
+
 		      TINO_GETOPT_CHAR
 		      "t	line termination character, default whitespace\n"
 		      "		Note: -t defaults to NUL if -n present."
 		      , &tchar,
-
-		      TINO_GETOPT_FLAG
-		      "i	ignore errors silently"
-		      , &ignore,
-
-		      TINO_GETOPT_FLAG
-		      "q	quiet mode: do not print (shell escaped) file names"
-		      , &quiet,
 
 		      TINO_GETOPT_FLAG
 		      "u	unbuffered output"
