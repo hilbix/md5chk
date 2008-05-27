@@ -27,6 +27,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
+ * Revision 1.9  2008-05-27 23:48:51  tino
+ * DEL escaped, too
+ *
  * Revision 1.8  2008-02-08 02:38:04  tino
  * Help options sorted
  *
@@ -75,7 +78,7 @@ static void
 shellescapename(const char *s)
 {
   for (; *s; s++)
-    if (((signed char)*s)<33)
+    if (((unsigned char)*s)<33 || ((unsigned char)*s)>=127)
       printf("\\%03o", (unsigned char)*s);
     else
       switch (*s)

@@ -1,2 +1,3 @@
-Options in help output sorted
+Bugfix, DEL now is an escaped character, too.
 
+Options in help output sorted, too

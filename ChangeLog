@@ -1,3 +1,7 @@
+2008-05-28  Valentin Hilbig  <tino@zoo.03.softkill.net>
+
+	* md5chk.c (shellescapename): added DEL to the escape
+
 2008-02-08  Valentin Hilbig  <tino@firebird.03.softkill.net>
 
 	* md5chk.c (main): getopt help options sorted
