@@ -1,0 +1,16 @@
+#
+
+file	1	A
+file	2	B
+file	3	C
+file	4	D
+file	5	E
+file	6	F
+run	md5chk A B C D E F | sed 's/ / */' | md5sum --check
+RUN	0	A: OK@_B: OK@_C: OK@_D: OK@_E: OK@_F: OK
+FILE	1	A
+FILE	2	B
+FILE	3	C
+FILE	4	D
+FILE	5	E
+FILE	6	F
