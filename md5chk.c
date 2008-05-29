@@ -27,6 +27,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
+ * Revision 1.11  2008-05-29 22:20:20  tino
+ * SHIT prepared (but not yet functional)
+ *
  * Revision 1.10  2008-05-29 18:48:58  tino
  * "make test" instead of subdir test
  *
@@ -57,6 +60,7 @@
 #include "tino/buf_line.h"
 #include "tino/getopt.h"
 #include "tino/md5.h"
+#include "tino/shit.h"
 
 #include "md5chk_version.h"
 
@@ -171,15 +175,34 @@ verror_fn(const char *prefix, TINO_VA_LIST list, int err)
 const char *
 shit_mode(void *ptr, const char *arg, const char *opt, void *usr)
 {
-  000;
-  return "SHIT mode cannot be used manually";
+  struct tino_shit	shit;
+  struct tino_shit_io	*me, *r;
+
+  tino_shit_initO(&shit, "md5chk");
+
+  me	= tino_shit_helperO(&shit, 0, 1, getenv("TINO_SHIT_MODE"));
+  if (!me)
+    return "SHIT mode cannot be used manually";
+
+  unbuffered	= 1;
+  stdinflag	= 0;
+
+  while ((r=tino_shit_request_inN(me))!=0)
+    {
+      tino_shit_answer_spoolO(r);
+      md5(tino_shit_stringO(r));
+      tino_shit_answer_finishO(r);
+
+      tino_shit_closeO(r);
+    }
+  tino_shit_exitO(&shit, 0);
+  return 0;
 }
 
 int
 main(int argc, char **argv)
 {
   int		argn;
-  int	aua;
 
   tino_verror_fn	= verror_fn;
   argn	= tino_getopt(argc, argv, 0, -1,
@@ -202,10 +225,9 @@ main(int argc, char **argv)
 		      "\tdone"
 		      ,
 
-		      TINO_GETOPT_FLAG TINO_GETOPT_LLOPT TINO_GETOPT_FN
+		      TINO_GETOPT_IGNORE TINO_GETOPT_LLOPT TINO_GETOPT_FN
 		      "shit	Shell Helper Integrated Transfer (do not use)"
 		      , shit_mode,
-		      &aua,
 
 		      TINO_GETOPT_USAGE
 		      "h	this help"

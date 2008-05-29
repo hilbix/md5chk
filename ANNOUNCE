@@ -1,3 +1,9 @@
-Bugfix, DEL now is an escaped character, too.
+Minor changes
 
-Options in help output sorted, too
+The new integration option --shit is prepared, but not yet operational.
+(Sorry for the name, but I needed a silly option name which will not
+interfere with another option which already is in use.)
+
+Before you ask: SHIT will provide a built in co-processing method like
+shell pipes.  However it will skip many fork() calls which are very slow
+platforms like CygWin.  It also will work over network sockets.
