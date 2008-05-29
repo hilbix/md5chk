@@ -27,6 +27,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
+ * Revision 1.10  2008-05-29 18:48:58  tino
+ * "make test" instead of subdir test
+ *
  * Revision 1.9  2008-05-27 23:48:51  tino
  * DEL escaped, too
  *
@@ -165,10 +168,18 @@ verror_fn(const char *prefix, TINO_VA_LIST list, int err)
     tino_verror_std(prefix, list, err);
 }
 
+const char *
+shit_mode(void *ptr, const char *arg, const char *opt, void *usr)
+{
+  000;
+  return "SHIT mode cannot be used manually";
+}
+
 int
 main(int argc, char **argv)
 {
   int		argn;
+  int	aua;
 
   tino_verror_fn	= verror_fn;
   argn	= tino_getopt(argc, argv, 0, -1,
@@ -190,6 +201,11 @@ main(int argc, char **argv)
 		      "\t\t...\n"
 		      "\tdone"
 		      ,
+
+		      TINO_GETOPT_FLAG TINO_GETOPT_LLOPT TINO_GETOPT_FN
+		      "shit	Shell Helper Integrated Transfer (do not use)"
+		      , shit_mode,
+		      &aua,
 
 		      TINO_GETOPT_USAGE
 		      "h	this help"
