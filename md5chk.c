@@ -27,6 +27,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
+ * Revision 1.12  2008-11-02 02:12:54  tino
+ * Option -p
+ *
  * Revision 1.11  2008-05-29 22:20:20  tino
  * SHIT prepared (but not yet functional)
  *
@@ -67,6 +70,15 @@
 static unsigned char	tchar;
 static int		nflag, unbuffered, quiet, stdinflag, direct, zero;
 static int		ignore, errs;
+static const char	*prefix;
+
+static void
+md5init(tino_md5_ctx *ctx)
+{
+  tino_md5_init(ctx);
+  if (prefix)
+    tino_md5_update(ctx, prefix, strlen(prefix));
+}
 
 static void
 md5read(FILE *fd, unsigned char digest[16])
@@ -75,9 +87,19 @@ md5read(FILE *fd, unsigned char digest[16])
   char		data[BUFSIZ*10];
   int		got;
 
-  tino_md5_init(&ctx);
+  md5init(&ctx);
   while ((got=fread(data, 1, sizeof data, fd))>0)
     tino_md5_update(&ctx, data, got);
+  tino_md5_final(&ctx, digest);
+}
+
+static void
+md5str(const char *str, unsigned char digest[16])
+{
+  tino_md5_ctx	ctx;
+
+  md5init(&ctx);
+  tino_md5_update(&ctx, str, strlen(str));
   tino_md5_final(&ctx, digest);
 }
 
@@ -107,7 +129,7 @@ md5(const char *name)
   FILE		*fd;
 
   if (direct)
-    tino_md5_bin(name, strlen(name), digest);
+    md5str(name, digest);
   else
     {
       if (stdinflag && !strcmp(name, "-"))
@@ -245,6 +267,11 @@ main(int argc, char **argv)
 		      "n	read NUL terminated lines\n"
 		      "		Note that NUL always acts as line terminator."
 		      , &nflag,
+
+		      TINO_GETOPT_STRING
+		      "p str	preset md5 algorithm with given string\n"
+		      "		This modifies the md5 algorithm by prefixing str."
+		      , &prefix,
 
 		      TINO_GETOPT_FLAG
 		      "q	quiet mode: do not print (shell escaped) file names"

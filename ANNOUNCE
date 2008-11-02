@@ -1,9 +1,13 @@
-Minor changes
+Added option -p (and --shit)
+
+Option -p initalizes the MD5 algorithm with some arbitrary string.
+This is to modify the md5 algorithm, to change calculated values.
+For example 'md5chk -p a -d b c' gives the same as 'md5chk -d ab ac',
+but the prefix is not shown in the output.
 
 The new integration option --shit is prepared, but not yet operational.
 (Sorry for the name, but I needed a silly option name which will not
 interfere with another option which already is in use.)
-
 Before you ask: SHIT will provide a built in co-processing method like
 shell pipes.  However it will skip many fork() calls which are very slow
 platforms like CygWin.  It also will work over network sockets.
