@@ -27,6 +27,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
+ * Revision 1.13  2009-07-17 01:10:17  tino
+ * Library fixes
+ *
  * Revision 1.12  2008-11-02 02:12:54  tino
  * Option -p
  *
@@ -202,7 +205,7 @@ shit_mode(void *ptr, const char *arg, const char *opt, void *usr)
 
   tino_shit_initO(&shit, "md5chk");
 
-  me	= tino_shit_helperO(&shit, 0, 1, getenv("TINO_SHIT_MODE"));
+  me	= tino_shit_helperO(&shit, 0, getenv("TINO_SHIT_MODE"));
   if (!me)
     return "SHIT mode cannot be used manually";
 
