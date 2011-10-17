@@ -1,4 +1,6 @@
-Options -k added
+Bugfix release and options -k added
+
+Now large files (more than 2 GB) can be processed again.  One of my machines exposed that bug to me.
 
 Checksumming a large file with options -l and -m I observed the problem, that long parts of NUL blocks always have an equal sum.  So the interleaving still does not protect against wrong ordering.
 
