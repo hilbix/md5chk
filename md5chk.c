@@ -27,6 +27,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
+ * Revision 1.16  2011-10-17 00:50:09  tino
+ * Usage corrected
+ *
  * Revision 1.15  2011-10-17 00:48:44  tino
  * Option -k
  *
@@ -446,7 +449,7 @@ main(int argc, char **argv)
 
 		      TINO_GETOPT_FLAG
 		      "k	Prefix MD5 with blocknumbers.  Implies -m\n"
-		      "		This way equal block give different hashes."
+		      "		This way equal blocks give different hashes."
 		      , &blocknumber,
 
 		      TINO_GETOPT_FLAG
@@ -459,7 +462,7 @@ main(int argc, char **argv)
 		      TINO_GETOPT_SUFFIX
 		      "m size	Max size of block for md5 (default: unlimited)\n"
 		      "		One MD5 sum each size bytes (and one for all).\n"
-		      "		Outputs 1+2+3+4=1234. (double effort)\n"
+		      "		Outputs 1+2+3+4=1234. (double effort)"
 		      , &maxsize,
 
 		      TINO_GETOPT_FLAG
