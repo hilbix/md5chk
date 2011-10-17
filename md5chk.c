@@ -27,6 +27,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
+ * Revision 1.17  2011-10-17 12:45:58  tino
+ * Usage, options letters in caps
+ *
  * Revision 1.16  2011-10-17 00:50:09  tino
  * Usage corrected
  *
@@ -444,11 +447,11 @@ main(int argc, char **argv)
 		      , &direct,
 
 		      TINO_GETOPT_FLAG
-		      "i	ignore errors silently"
+		      "i	Ignore errors silently"
 		      , &ignore,
 
 		      TINO_GETOPT_FLAG
-		      "k	Prefix MD5 with blocknumbers.  Implies -m\n"
+		      "k	prefix MD5 with blocKnumbers.  Implies -m\n"
 		      "		This way equal blocks give different hashes."
 		      , &blocknumber,
 
@@ -471,30 +474,30 @@ main(int argc, char **argv)
 		      , &nflag,
 
 		      TINO_GETOPT_STRING
-		      "p str	preset md5 algorithm with given string\n"
+		      "p str	Preset md5 algorithm with given string\n"
 		      "		This modifies the md5 algorithm by prefixing str."
 		      , &prefix,
 
 		      TINO_GETOPT_FLAG
-		      "q	quiet mode: do not print (shell escaped) file names"
+		      "q	Quiet mode: do not print (shell escaped) file names"
 		      , &quiet,
 
 		      TINO_GETOPT_FLAG
-		      "s	read data from stdin instead, not a file list\n"
+		      "s	read data from Stdin instead, not a file list\n"
 		      "		Enables '-' as file argument for stdin, too."
 		      , &stdinflag,
 
 		      TINO_GETOPT_CHAR
-		      "t	line termination character, default whitespace\n"
+		      "t	line Termination character, default whitespace\n"
 		      "		Note: -t defaults to NUL if -n present."
 		      , &tchar,
 
 		      TINO_GETOPT_FLAG
-		      "u	unbuffered output"
+		      "u	Unbuffered output"
 		      , &unbuffered,
 
 		      TINO_GETOPT_FLAG
-		      "z	write NUL(\"zero\") terminated lines, disables shell escape"
+		      "z	Write NUL(\"zero\") terminated lines, disables shell escape"
 		      , &zero,
 
 		      NULL);
