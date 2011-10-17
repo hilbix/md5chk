@@ -27,6 +27,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Log$
+ * Revision 1.15  2011-10-17 00:48:44  tino
+ * Option -k
+ *
  * Revision 1.14  2011-10-15 07:12:02  tino
  * cat, overlap, maxsize
  *
@@ -86,10 +89,24 @@ static FILE		*out;
 static tino_md5_ctx	ctx[3];
 static int		effort;	/* additional contexts calculated: 0-2	*/
 
+static unsigned blocksize;
+static char *block;
+static unsigned blocknumber;
+
+
 static void
 md5init(int i)
 {
   tino_md5_init(ctx+i);
+  if (blocknumber)
+    {
+      char tmp[22];
+
+      snprintf(tmp, sizeof tmp, "%020u", blocknumber);
+      tino_md5_update(ctx+i, tmp, 20);
+      if (!++blocknumber)
+	blocknumber++;
+    }
   if (prefix)
     tino_md5_update(ctx+i, prefix, strlen(prefix));
 }
@@ -147,18 +164,19 @@ fd_at_eof(FILE *fd)
 static int
 md5read(FILE *fd)
 {
-  char		data[BUFSIZ*10];
-  int		got;
-  int		blk;
+  int			got;
+  unsigned		blk;
   unsigned long long	len;
 
   len = maxsize;
-  blk = sizeof data;
+  blk = blocksize;
   if (len && blk>len)
     blk = len;
-  while (blk && (got=fread(data, 1, blk, fd))>0)
+  if (!block)
+    block	= tino_allocO(blk);
+  while (blk && (got=fread(block, (size_t)1, (size_t)blk, fd))>0)
     {
-      md5upd(data, got);
+      md5upd(block, got);
       if (!maxsize)
 	continue;
       len -= got;
@@ -406,6 +424,13 @@ main(int argc, char **argv)
 		      "h	this help"
 		      ,
 
+		      TINO_GETOPT_UNSIGNED
+		      TINO_GETOPT_DEFAULT
+		      TINO_GETOPT_SUFFIX
+		      "b size	Blocksize for operation"
+		      , &blocksize,
+		      (unsigned)(BUFSIZ*10),
+
 		      TINO_GETOPT_FLAG
 		      "c	Cat mode, echo input to stdout again\n"
 		      "		sends MD5 sum to stderr, use -u to use 2>&1"
@@ -418,6 +443,11 @@ main(int argc, char **argv)
 		      TINO_GETOPT_FLAG
 		      "i	ignore errors silently"
 		      , &ignore,
+
+		      TINO_GETOPT_FLAG
+		      "k	Prefix MD5 with blocknumbers.  Implies -m\n"
+		      "		This way equal block give different hashes."
+		      , &blocknumber,
 
 		      TINO_GETOPT_FLAG
 		      "l	overLapping mode for -m (-m defaults to 1 MiB)\n"
@@ -469,7 +499,7 @@ main(int argc, char **argv)
   if (argn<=0)
     return 1;
 
-  if (overlap && !maxsize)
+  if ((overlap || blocknumber) && !maxsize)
     maxsize = 1024 * 1024;
 
   if (stdinflag && direct)

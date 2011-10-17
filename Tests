@@ -12,6 +12,8 @@ cmp	echo `cat F A B C D E F | md5chk -qsm33`+
 CMP	{ md5sum F A B C D E F; echo =; cat F A B C D E F | md5sum; } | sed 's/ .*$//' | tr '\n' + | sed 's/+=+/=/'
 cmp	cat B C D | md5chk -qslm33
 CMP	echo "`md5chk -q B`-`cat B C | md5chk -qs`-`cat C D | md5chk -qs`+`md5chk -q D`=`cat B C D | md5chk -qs`"
+cmp	md5chk -k A B C D
+CMP	md5chk -p 00000000000000000001 A; md5chk -p 00000000000000000002 B; md5chk -p 00000000000000000003 C; md5chk -p 00000000000000000004 D
 FILE	1	A
 FILE	2	B
 FILE	3	C

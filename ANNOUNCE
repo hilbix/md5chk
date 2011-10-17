@@ -1,13 +1,9 @@
-Options -c, -l and -m added, install path now /usr/local/bin/
+Options -k added
 
-If you have a very big fiile the MD5 sum can be broken up into parts,
-say each 10K one MD5 sum is taken.  If set to 0 means all the full file.
+Checksumming a large file with options -l and -m I observed the problem, that long parts of NUL blocks always have an equal sum.  So the interleaving still does not protect against wrong ordering.
 
-Output is then like FIRST+SECOND+LAST=COMPLETE
+The complete sum will detect this, however this leaves a big puzzle on how to assemble all the pieces such that they are ok again.  This now is solved with the new option -k.
 
-With option -l the -m is overlapping, that is each output MD5 covers two blocks instead of one.
+By mixing in the block number into the MD5 hash, the hashes become unique, such that - with interleaving - you can sort all block such that they fit where they belong.  (It's still a nontrivial task, but can be done.)
 
-Output then is like FIRST-FIRSTSECOND-SECONDLAST+LAST=COMPLETE
-
-Also new is option -c, with this you can do an MD5 of data which goes throgh a pipe.
-
+Option -k is followed by Option -p.
