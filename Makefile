@@ -1,11 +1,11 @@
 # Makefile automatically generated, do not edit!
 # This output (only this Makefile) is Public Domain.
 #
-#@MD5TINOIGN@ Creation date: Sat Nov 23 17:21:45 CET 2013
+#@MD5TINOIGN@ Creation date: Fri Apr 25 00:11:36 CEST 2014
 #
 # This file is based on following files:
 #@MD5TINOIGN@ 1: Makefile.tino
-#@MD5TINOIGN@ 2: /home/tino/src/md5chk/tino/Makefile.proto
+#@MD5TINOIGN@ 2: /git/git/src/md5chk/tino/Makefile.proto
 
 #
 #@MD5TINOIGN@ included: Makefile.tino
@@ -34,7 +34,7 @@ ADD_LDFLAGS=
 INSTALLPATH=/usr/local
 
 #
-#@MD5TINOIGN@ included: /home/tino/src/md5chk/tino/Makefile.proto
+#@MD5TINOIGN@ included: /git/git/src/md5chk/tino/Makefile.proto
 #
 
 # Automatically generated from "PROGS" above
@@ -169,8 +169,8 @@ $(PROG1):	$(PROG1).o $(OBJS) $(LIBS)
 
 # included: md5chk.d
 $(PROG1).o:  md5chk.c tino/buf_line.h tino/buf.h tino/file.h tino/sysfix.h \
- tino/sysfix_cygwin.h tino/type.h tino/alloc.h tino/err.h tino/fatal.h \
- tino/ex.h tino/arg.h tino/debug.h tino/codec.h tino/getopt.h tino/md5.h \
- tino/shit.h md5chk_version.h
+ tino/sysfix_cygwin.h tino/sysfix_diet.h tino/type.h tino/alloc.h \
+ tino/err.h tino/fatal.h tino/ex.h tino/arg.h tino/debug.h tino/codec.h \
+ tino/getopt.h tino/md5.h tino/shit.h md5chk_version.h
 
 # end
