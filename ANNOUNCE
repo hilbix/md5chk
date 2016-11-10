@@ -1,11 +1,2 @@
-Bugfix release and options -k added
-
-Now large files (more than 2 GB) can be processed, one of my machines exposed that bug to me.
-
-Checksumming a large file with options -l and -m I observed the problem, that long parts of NUL blocks always have an equal sum.  So the interleaving still does not protect against wrong ordering.
-
-The complete sum will detect this, however this leaves a big puzzle on how to assemble all the pieces such that they are ok again.  This now is solved with the new option -k.
-
-By mixing in the block number into the MD5 hash, the hashes become unique, such that - with interleaving - you can sort all block such that they fit where they belong.  (It's still a nontrivial task, but can be done.)
-
-Option -k is followed by Option -p.
+Announcements are now in the git commit log:
+git log --follow VERSION

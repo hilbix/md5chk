@@ -1,3 +1,4 @@
 *.o
 *.d
 md5chk
+md5chk_version.h
