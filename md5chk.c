@@ -23,7 +23,6 @@
 
 #include "md5chk_version.h"
 
-
 static unsigned char	tchar;
 static int		nflag, unbuffered, quiet, stdinflag, direct, zero;
 static int		ignore, errs;
@@ -41,6 +40,7 @@ static int		effort;	/* additional contexts calculated: 0-2	*/
 static unsigned blocksize;
 static char *block;
 static unsigned blocknumber;
+static int	blocknumbers;
 
 
 static void
@@ -51,6 +51,8 @@ md5init(int i)
     {
       char tmp[22];
 
+      if (!i && blocknumbers == 2)
+        blocknumber	= 1;
       snprintf(tmp, sizeof tmp, "%020u", blocknumber);
       tino_md5_update(ctx+i, tmp, 20);
       if (!++blocknumber)
@@ -117,6 +119,7 @@ md5read(int fd, unsigned long long count, const char *name, int *err)
   unsigned		blk;
   unsigned long long	len;
   unsigned long long	cnt;
+  int			init;
 
   len = maxsize;
   if (!len || (count && len>count))
@@ -134,8 +137,13 @@ md5read(int fd, unsigned long long count, const char *name, int *err)
 
   got = 0;
   cnt = 0;
-  while (blk && (got=tino_file_readE(fd, block, (size_t)blk))>0)
+  for (init=effort; blk && (got=tino_file_readE(fd, block, (size_t)blk))>0; init=0)
     {
+      if (init)	/* hack to recreate original behavior	*/
+        {
+          md5init(1);
+          init	 = 0;
+        }
       md5upd(block, got);
       cnt += got;
       if (!len)
@@ -253,10 +261,6 @@ md5file(const char *name)
   more	= 0;
   cnt	= exact;
   err	= 0;
-#if 0
-  if (blocknumber)
-    blocknumber = 1;
-#endif
   md5init(0);
   for (got=0;;)
     {
@@ -283,7 +287,7 @@ md5file(const char *name)
            */
           md5copy(0,1);	/* 0 is for =e	*/
           md5exit(1);	/* output current sum	*/
-          md5init(1);	/* next sum is in 1	*/
+          /* md5init(1); done in md5read() now	*/
           continue;
         }
 
@@ -294,7 +298,7 @@ md5file(const char *name)
           /* append next block	*/
           fputc('+', out);
           md5exit(1);	/* output current sum	*/
-          md5init(1);	/* next sum is in 1	*/
+          /* md5init(1); done in md5read() now	*/
           continue;
         }
 
@@ -309,7 +313,7 @@ md5file(const char *name)
       fputc('-', out);
       md5exit(2);	/* output sum of combined last 2 blocks	*/
       md5copy(1,2);	/* preset last block into combination sum 2	*/
-      md5init(1);	/* sum next block in 1	*/
+      /* md5init(1); done in md5read() now	*/
     }
   if (err)
     {
@@ -484,10 +488,13 @@ main(int argc, char **argv)
                       "i	Ignore errors silently"
                       , &ignore,
 
+                      TINO_GETOPT_MAX
                       TINO_GETOPT_FLAG
                       "k	prefix MD5 with blocKnumbers.  Implies -m\n"
-                      "		This way equal blocks give different hashes."
-                      , &blocknumber,
+                      "		This way equal blocks give different hashes.\n"
+                      "		Use two times to reset between args/files"
+                      , &blocknumbers,
+                      2,
 
                       TINO_GETOPT_FLAG
                       "l	overLapping mode for -m (-m defaults to 1 MiB)\n"
@@ -539,7 +546,8 @@ main(int argc, char **argv)
   if (argn<=0)
     return 1;
 
-  if ((overlap || blocknumber) && !maxsize)
+  blocknumber	= blocknumbers ? 1 : 0;
+  if ((overlap || blocknumbers) && !maxsize)
     maxsize = 1024 * 1024;
 
   if ((unsigned long long)(off_t)exact  != exact ||
