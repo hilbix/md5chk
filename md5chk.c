@@ -42,7 +42,6 @@ static char *block;
 static unsigned blocknumber;
 static int	blocknumbers;
 
-
 static void
 md5init(int i)
 {
@@ -96,18 +95,31 @@ md5copy(int from, int to)
   memcpy(ctx+to, ctx+from, sizeof *ctx);
 }
 
-/* A desparate EOF checker.
- * Looks 1 character ahead.
- */
 static int
-fd_at_eof(FILE *fd)
+read_away(int fd, unsigned long long count, const char *name)
 {
-  int	c;
+  char	buf[BUFSIZ];
 
-  c = fgetc(fd);
-  if (c==EOF)
-    return 1;
-  ungetc(c, fd);
+  while (count)
+    {
+      size_t	max;
+      int	got;
+
+      max	= sizeof buf;
+      if (max>count)
+        max	= count;
+      if ((got = tino_file_readE(fd, buf, max)) == 0)
+        {
+          tino_err("unexpected EOF: %s", name);
+          return 1;
+        }
+      if (got < 0)
+        {
+          tino_err("read error: %s", name);
+          return 1;
+        }
+      count -= max;
+    }
   return 0;
 }
 
@@ -241,12 +253,14 @@ md5file(const char *name)
   if (*name && fd >= 0 && fd != INTMAX_MAX && end && !*end && *name)
     {
       /* numeric value is FD to use	*/
+      if (read_away(fd, offset, name))
+        return;
     }
   else if (stdinflag && !strcmp(name, "-"))
     {
       fd	= 0;
-      if (exact)
-        return (void)tino_err("seeking stdin not yet implemented: %s", name);
+      if (read_away(fd, offset, name))
+        return;
     }
   else if ((fd=open(name, O_RDONLY))<0)
     return (void) tino_err("cannot open: %s", name);
