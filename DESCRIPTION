@@ -1,21 +1,4 @@
 Create md5sums for easy shell usage
-# $Header$
-#
-# $Log$
-# Revision 1.5  2007-01-17 01:19:12  tino
-# Options -s and -d
-#
-# Revision 1.4  2006/07/31 21:24:05  tino
-# Documentation clarified (was buggy) and help (-h) improved
-#
-# Revision 1.3  2006/07/25 21:54:22  tino
-# See ChangeLog
-#
-# Revision 1.2  2006/07/25 21:31:33  tino
-# release 0.0.0
-#
-# Revision 1.1  2006/07/25 20:56:18  tino
-# First version
 
 Sometimes you want to pipe a list of files to md5sum.  This then looks
 like
