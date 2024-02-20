@@ -1,3 +1,5 @@
+Changelog is retired, see "git log --follow VERSION".
+
 2008-05-28  Valentin Hilbig  <tino@zoo.03.softkill.net>
 
 	* md5chk.c (shellescapename): added DEL to the escape
