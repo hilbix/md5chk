@@ -1,7 +1,7 @@
 # Makefile automatically generated, do not edit!
 # This output (only this Makefile) is Public Domain.
 #
-#@MD5TINOIGN@ Creation date: So Jul 26 19:46:56 CEST 2020
+#@MD5TINOIGN@ Creation date: Tue Feb 20 02:54:27 CET 2024
 #
 # This file is based on following files:
 #@MD5TINOIGN@ 1: Makefile.tino
@@ -174,6 +174,6 @@ $(PROG1).o:  md5chk.c tino/buf_line.h tino/buf.h tino/file.h tino/sysfix.h \
  tino/sysfix_cygwin.h tino/sysfix_diet.h tino/sysfix_linux.h \
  tino/sysfix_osx.h tino/type.h tino/alloc.h tino/debug.h tino/err.h \
  tino/fatal.h tino/ex.h tino/arg.h tino/codec.h tino/getopt.h tino/md5.h \
- tino/shit.h md5chk_version.h
+ md5chk_version.h
 
 # end
