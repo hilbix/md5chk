@@ -48,8 +48,6 @@ md5init(int i)
     {
       char tmp[22];
 
-      if (!i)
-        blocknumber = 1;
       snprintf(tmp, sizeof tmp, "%020u", blocknumber);
       tino_md5_update(ctx+i, tmp, 20);
       if (!++blocknumber)
@@ -140,6 +138,8 @@ static void
 md5str(const char *str)
 {
   effort = 0;
+  if (blocknumber)
+    blocknumber = 1;
   md5init(0);
   md5upd(str, strlen(str));
   md5exit(0);
