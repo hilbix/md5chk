@@ -1,0 +1,1 @@
+#define MD5CHK_VERSION "1.0.0"
