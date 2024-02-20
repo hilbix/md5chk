@@ -18,9 +18,11 @@
 #include "tino/buf_line.h"
 #include "tino/getopt.h"
 #include "tino/md5.h"
-#include "tino/shit.h"
+
+#include <inttypes.h>
 
 #include "md5chk_version.h"
+
 
 static unsigned char	tchar;
 static int		nflag, unbuffered, quiet, stdinflag, direct, zero;
@@ -28,6 +30,7 @@ static int		ignore, errs;
 static int		overlap;
 static const char	*prefix;
 static unsigned long long	maxsize;
+static unsigned long long	offset, exact;
 static int		cat;
 
 static FILE		*out;
@@ -107,39 +110,70 @@ fd_at_eof(FILE *fd)
 }
 
 /* returns true if another block must be read	*/
-static int
-md5read(FILE *fd)
+static unsigned long long
+md5read(int fd, unsigned long long count, const char *name, int *err)
 {
   int			got;
   unsigned		blk;
   unsigned long long	len;
+  unsigned long long	cnt;
 
   len = maxsize;
+  if (!len || (count && len>count))
+    len	= count;
+
+  /* blocksize and maxsize are constant.
+   * count is maximized on the first invocation.
+   * Hence blk is the maximum ever needed on the first invocation.
+   */
   blk = blocksize;
   if (len && blk>len)
     blk = len;
   if (!block)
-    block	= tino_allocO(blk);
-  while (blk && (got=fread(block, (size_t)1, (size_t)blk, fd))>0)
+    block	= tino_allocO(blk);	/* blk is allocated on the first invocation	*/
+
+  got = 0;
+  cnt = 0;
+  while (blk && (got=tino_file_readE(fd, block, (size_t)blk))>0)
     {
       md5upd(block, got);
-      if (!maxsize)
+      cnt += got;
+      if (!len)
         continue;
       len -= got;
       if (blk>len)
         blk = len;
     }
-  if (blk)
-    return 0;	/* EOF	*/
-  return !fd_at_eof(fd);
+  if (got<0)
+    {
+      *err	= 1;	/* read error	*/
+      return 0;
+    }
+  if (!got && count)
+    *err	= 2;	/* unexpected EOF: short read on -e	*/
+  return cnt;
 }
 
 static void
 md5str(const char *str)
 {
+  size_t	len;
+
+  len	= strlen(str);
+  if (offset)
+    {
+      if (len < offset)
+        return (void)tino_err("string given is too short for -f");
+      str += offset;
+      len -= offset;
+    }
+  if (exact)
+    {
+      if (len < exact)
+        return (void)tino_err("string given is too short for -e");
+       len	= exact;
+    }
   effort = 0;
-  if (blocknumber)
-    blocknumber = 1;
   md5init(0);
   md5upd(str, strlen(str));
   md5exit(0);
@@ -175,107 +209,148 @@ term(void)
 }
 
 static void
-errterm(void)
+errterm(int type)
 {
   int e;
 
   if (!effort)
     return;
   e = errno;
-  fprintf(out, "[ERR]");
+  fprintf(out, type == 2 ? "[EOF]" : "[ERR]");
   term();
   errno = e;
 }
 
+static void
+md5file(const char *name)
+{
+  unsigned long long	cnt;
+  int			fd, err, more;
+  char			*end;
+  unsigned long long	got;
+
+  fd	= strtoimax(name, &end, 10);
+  if (*name && fd >= 0 && fd != INTMAX_MAX && end && !*end && *name)
+    {
+      /* numeric value is FD to use	*/
+    }
+  else if (stdinflag && !strcmp(name, "-"))
+    {
+      fd	= 0;
+      if (exact)
+        return (void)tino_err("seeking stdin not yet implemented: %s", name);
+    }
+  else if ((fd=open(name, O_RDONLY))<0)
+    return (void) tino_err("cannot open: %s", name);
+  else if (offset)
+    {
+      if ((unsigned long long)lseek(fd, (off_t)0, SEEK_END) < offset + exact)
+        return (void)tino_err("file too short: %s", offset, name);
+      if ((unsigned long long)lseek(fd, (off_t)offset, SEEK_SET) != offset)
+        return (void)tino_err("cannot seek to offset %llu: %s", offset, name);
+    }
+  effort= 0;
+  more	= 0;
+  cnt	= exact;
+  err	= 0;
+#if 0
+  if (blocknumber)
+    blocknumber = 1;
+#endif
+  md5init(0);
+  for (got=0;;)
+    {
+      if (cnt)
+        {
+          cnt -= got;
+          if (!cnt)
+            break;	/* artificial EOF, got != 0	*/
+        }
+      got = md5read(fd, cnt, name, &err);
+      if (!got || err || !maxsize)	/* EOF or ERR or everything read	*/
+        break;
+
+      /* maxsize > 0: Output blocks of
+       * a+b+c=e	non overlapping mode
+       * a-b-c=e	overlapping mode
+       */
+      if (!effort)
+        {
+          /* first block of -m
+           */
+          effort = 1;
+          /* copy the first block so we can output it
+           */
+          md5copy(0,1);	/* 0 is for =e	*/
+          md5exit(1);	/* output current sum	*/
+          md5init(1);	/* next sum is in 1	*/
+          continue;
+        }
+
+      more = 1;		/* we need the =	*/
+      /* already saw output	*/
+      if (!overlap)
+        {
+          /* append next block	*/
+          fputc('+', out);
+          md5exit(1);	/* output current sum	*/
+          md5init(1);	/* next sum is in 1	*/
+          continue;
+        }
+
+      /* overlapping case	*/
+      if (effort==1)
+        {
+          /* first 2 blocks	*/
+          effort = 2;
+          md5copy(0,2);	/* 0 contains sum of first and second block, output this	*/
+        }
+
+      fputc('-', out);
+      md5exit(2);	/* output sum of combined last 2 blocks	*/
+      md5copy(1,2);	/* preset last block into combination sum 2	*/
+      md5init(1);	/* sum next block in 1	*/
+    }
+  if (err)
+    {
+      errterm(err);
+      tino_err(err == 2 ? "unexpected EOF: %s" : "read error: %s", name);
+      tino_file_closeE(fd);
+      return;
+    }
+  if (tino_file_closeE(fd))
+    {
+      errterm(0);
+      tino_err("cannot close: %s", name);
+      return;
+    }
+  /* when we came here we have following cases:
+   * !effort:		return md5exit(0)
+   * !more:		return as md5exit(1) already did the output above
+   * effort == 1:	
+   */
+  if (effort)
+    {
+      if (!more)
+        return;
+      if (effort == 2)
+        {
+          fputc('+', out);
+          md5exit(2);
+        }
+      fputc('=', out);
+    }
+  /* output complete hash	*/
+  md5exit(0);
+}
 
 static void
 md5(const char *name)
 {
-  FILE	*fd;
-
   if (direct)
     md5str(name);
   else
-    {
-      if (stdinflag && !strcmp(name, "-"))
-        fd	= stdin;
-      else if ((fd=fopen(name, "rb"))==NULL)
-        {
-          tino_err("cannot open: %s", name);
-          return;
-        }
-      effort = 0;
-      md5init(0);
-      while (md5read(fd))
-        {
-          if (!effort)
-            {
-              /* first block of -m
-               */
-              effort = 1;
-              /* copy the first block so we can output it
-               */
-              md5copy(0,1);
-              md5exit(1);
-              md5init(1);
-              continue;
-            }
-
-          /* already saw output	*/
-          if (!overlap)
-            {
-              /* append next block	*/
-              fputc('+', out);
-              md5exit(1);
-              md5init(1);
-              continue;
-            }
-
-          /* overlapping case	*/
-          if (effort==1)
-            {
-              /* first 2 blocks	*/
-              effort = 2;
-              md5copy(0,2);
-            }
-
-          fputc('-', out);
-          md5exit(2);
-          md5copy(1,2);
-          md5init(1);
-          continue;
-        }
-      if (ferror(fd))
-        {
-          errterm();
-          tino_err("read error: %s", name);
-          fclose(fd);
-          return;
-        }
-      if (fclose(fd))
-        {
-          errterm();
-          tino_err("cannot close: %s", name);
-          return;
-        }
-      if (effort)
-        {
-          /* already saw output	*/
-          if (effort==2)
-            {
-              fputc('-', out);
-              md5exit(2);
-            }
-          /* special degraded case is handled correctly, too:
-           * 12 => 1+2=12 ("+2=" is output next)
-           */
-          fputc('+', out);
-          md5exit(1);
-          fputc('=', out);
-        }
-      /* output complete hash	*/
-      md5exit(0);
-    }
+    md5file(name);
   if (!quiet)
     {
       fputc(' ', out);
@@ -311,6 +386,7 @@ verror_fn(const char *prefix, TINO_VA_LIST list, int err)
     tino_verror_std(prefix, list, err);
 }
 
+#if 0
 const char *
 shit_mode(void *ptr, const char *arg, const char *opt, void *usr)
 {
@@ -337,6 +413,7 @@ shit_mode(void *ptr, const char *arg, const char *opt, void *usr)
   tino_shit_exitO(&shit, 0);
   return 0;
 }
+#endif
 
 int
 main(int argc, char **argv)
@@ -346,7 +423,8 @@ main(int argc, char **argv)
   tino_verror_fn	= verror_fn;
   argn	= tino_getopt(argc, argv, 0, -1,
                       TINO_GETOPT_VERSION(MD5CHK_VERSION)
-                      " [files..]\n"
+                      " [args..]\n"
+                      "\tnumeric falues are the FD to use, - is stdin\n"
                       "Prototype 0:\n"
                       "\tmd5chk -d 'string1' 'string2'\n"
                       "\techo test | md5chk -s\n"
@@ -364,9 +442,11 @@ main(int argc, char **argv)
                       "\tdone"
                       ,
 
+#if 0
                       TINO_GETOPT_IGNORE TINO_GETOPT_LLOPT TINO_GETOPT_FN
                       "shit	Shell Helper Integrated Transfer (do not use)"
                       , shit_mode,
+#endif
 
                       TINO_GETOPT_USAGE
                       "h	this help"
@@ -387,6 +467,18 @@ main(int argc, char **argv)
                       TINO_GETOPT_FLAG
                       "d	Do md5sum of commandline args or lines from stdin"
                       , &direct,
+
+                      TINO_GETOPT_ULLONG
+                      TINO_GETOPT_SUFFIX
+                      "e count	Read exactly count bytes, 0 is unlimited.\n"
+                      "		Errors if there are less bytes"
+                      , &exact,
+
+                      TINO_GETOPT_ULLONG
+                      TINO_GETOPT_SUFFIX
+                      "f offset	Start reading at the given offset.  On stdin this skips.\n"
+                      "		Errors if there are less bytes or seek() is impossible"
+                      , &offset,
 
                       TINO_GETOPT_FLAG
                       "i	Ignore errors silently"
@@ -450,6 +542,12 @@ main(int argc, char **argv)
   if ((overlap || blocknumber) && !maxsize)
     maxsize = 1024 * 1024;
 
+  if ((unsigned long long)(off_t)exact  != exact ||
+      (unsigned long long)(off_t)offset != offset)
+    {
+      tino_err("Sorry, conversion of bytes to off_t failed, probably overflow");
+      return 1;
+    }
   if (stdinflag && direct)
     {
       tino_err("Warning: Options -d and -s together makes no sense");
