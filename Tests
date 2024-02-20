@@ -14,9 +14,16 @@ cmp	cat B C D | md5chk -qslm33
 CMP	echo "`md5chk -q B`-`cat B C | md5chk -qs`-`cat C D | md5chk -qs`+`md5chk -q D`=`cat B C D | md5chk -qs`"
 cmp	md5chk -k A B C D
 CMP	md5chk -p 00000000000000000001 A; md5chk -p 00000000000000000002 B; md5chk -p 00000000000000000003 C; md5chk -p 00000000000000000004 D
+cmp	md5chk -kk A B C D
+CMP	md5chk -p 00000000000000000001 A; md5chk -p 00000000000000000001 B; md5chk -p 00000000000000000001 C; md5chk -p 00000000000000000001 D
+cmp	md5chk -f4 -e4 -s A
+CMP	head -c8 A | tail -c4 | md5chk -s - | sed s/-/A/
+cmp	md5chk -f4 -e4 -s - <B
+CMP	head -c8 B | tail -c4 | md5chk -s -
 FILE	1	A
 FILE	2	B
 FILE	3	C
 FILE	4	D
 FILE	5	E
 FILE	6	F
+
