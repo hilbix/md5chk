@@ -42,6 +42,18 @@ static char *block;
 static unsigned blocknumber;
 static int	blocknumbers;
 
+static int
+md5err(const char *s, ...)
+{
+  tino_va_list  list;
+
+  tino_va_start(list, s);
+  tino_verr(&list);
+  tino_va_end(list);
+
+  return 1;
+}
+
 static void
 md5init(int i)
 {
@@ -109,15 +121,9 @@ read_away(int fd, unsigned long long count, const char *name)
       if (max>count)
         max	= count;
       if ((got = tino_file_readE(fd, buf, max)) == 0)
-        {
-          tino_err("unexpected EOF: %s", name);
-          return 1;
-        }
+        return md5err("unexpected EOF: %s", name);
       if (got < 0)
-        {
-          tino_err("read error: %s", name);
-          return 1;
-        }
+        return md5err("read error: %s", name);
       count -= max;
     }
   return 0;
@@ -174,7 +180,7 @@ md5read(int fd, unsigned long long count, const char *name, int *err)
   return cnt;
 }
 
-static void
+static int
 md5str(const char *str)
 {
   size_t	len;
@@ -183,20 +189,21 @@ md5str(const char *str)
   if (offset)
     {
       if (len < offset)
-        return (void)tino_err("string given is too short for -f");
+        return md5err("string given is too short for -f");
       str += offset;
       len -= offset;
     }
   if (exact)
     {
       if (len < exact)
-        return (void)tino_err("string given is too short for -e");
+        return md5err("string given is too short for -e");
        len	= exact;
     }
   effort = 0;
   md5init(0);
   md5upd(str, strlen(str));
   md5exit(0);
+  return 0;
 }
 
 static void
@@ -241,7 +248,7 @@ errterm(int type)
   errno = e;
 }
 
-static void
+static int
 md5file(const char *name)
 {
   unsigned long long	cnt;
@@ -254,22 +261,22 @@ md5file(const char *name)
     {
       /* numeric value is FD to use	*/
       if (read_away(fd, offset, name))
-        return;
+        return 1;
     }
   else if (stdinflag && !strcmp(name, "-"))
     {
       fd	= 0;
       if (read_away(fd, offset, name))
-        return;
+        return 1;
     }
   else if ((fd=open(name, O_RDONLY))<0)
-    return (void) tino_err("cannot open: %s", name);
+    return md5err("cannot open: %s", name)|1;
   else if (offset)
     {
       if ((unsigned long long)lseek(fd, (off_t)0, SEEK_END) < offset + exact)
-        return (void)tino_err("file too short: %s", offset, name);
+        return md5err("file too short: %s", offset, name)|1;
       if ((unsigned long long)lseek(fd, (off_t)offset, SEEK_SET) != offset)
-        return (void)tino_err("cannot seek to offset %llu: %s", offset, name);
+        return md5err("cannot seek to offset %llu: %s", offset, name)|1;
     }
   effort= 0;
   more	= 0;
@@ -332,15 +339,15 @@ md5file(const char *name)
   if (err)
     {
       errterm(err);
-      tino_err(err == 2 ? "unexpected EOF: %s" : "read error: %s", name);
+      md5err(err == 2 ? "unexpected EOF: %s" : "read error: %s", name);
       tino_file_closeE(fd);
-      return;
+      return 1;
     }
   if (tino_file_closeE(fd))
     {
       errterm(0);
-      tino_err("cannot close: %s", name);
-      return;
+      md5err("cannot close: %s", name);
+      return 1;
     }
   /* when we came here we have following cases:
    * !effort:		return md5exit(0)
@@ -350,7 +357,7 @@ md5file(const char *name)
   if (effort)
     {
       if (!more)
-        return;
+        return 0;
       if (effort == 2)
         {
           fputc('+', out);
@@ -360,15 +367,14 @@ md5file(const char *name)
     }
   /* output complete hash	*/
   md5exit(0);
+  return 0;
 }
 
-static void
+static int
 md5(const char *name)
 {
-  if (direct)
-    md5str(name);
-  else
-    md5file(name);
+  if (direct ? md5str(name) : md5file(name))
+    return 1;	/* error */
   if (!quiet)
     {
       fputc(' ', out);
@@ -378,22 +384,23 @@ md5(const char *name)
         shellescapename(name);
     }
   term();
+  return 0;
 }
 
-static void
+static int
 md5chk(void)
 {
   TINO_BUF	buf;
   const char	*name;
+  int		err;
 
   if (stdinflag)
-    {
-      md5("-");
-      return;
-    }
+    return md5("-");
   tino_buf_initO(&buf);
+  err = 0;
   while ((name=tino_buf_line_readE(&buf, 0, tchar ? tchar : nflag ? 0 : -1))!=0)
-    md5(name);
+    err |= md5(name);
+  return err;
 }
 
 static void
@@ -566,15 +573,10 @@ main(int argc, char **argv)
 
   if ((unsigned long long)(off_t)exact  != exact ||
       (unsigned long long)(off_t)offset != offset)
-    {
-      tino_err("Sorry, conversion of bytes to off_t failed, probably overflow");
-      return 1;
-    }
+    return md5err("Sorry, conversion of bytes to off_t failed, probably overflow");
   if (stdinflag && direct)
-    {
-      tino_err("Warning: Options -d and -s together makes no sense");
-      return 1;
-    }
+    return md5err("Warning: Options -d and -s together makes no sense");
+
   out = cat ? stderr : stdout;
   if (argn<argc)
     do
