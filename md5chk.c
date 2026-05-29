@@ -585,7 +585,7 @@ main(int argc, char **argv)
     return md5err("-a format unknown (option given too often?)");
 
   blocknumber	= blocknumbers ? 1 : 0;
-  if ((overlap || blocknumbers) && !maxsize)
+  if ((overlap || blocknumbers || alt) && !maxsize)
     maxsize = 1024 * 1024;
 
   if ((unsigned long long)(off_t)exact  != exact ||
