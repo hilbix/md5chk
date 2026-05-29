@@ -27,6 +27,7 @@ static unsigned char	tchar;
 static int		nflag, unbuffered, quiet, stdinflag, direct, zero;
 static int		ignore, errs;
 static int		overlap;
+static int		alt;
 static const char	*prefix;
 static unsigned long long	maxsize;
 static unsigned long long	offset, exact;
@@ -249,6 +250,21 @@ errterm(int type)
 }
 
 static int
+printname(const char *name)
+{
+  if (!quiet)
+    {
+      fputc(' ', out);
+      if (zero)
+        fprintf(out, "%s", name);
+      else
+        shellescapename(name);
+    }
+  term();
+  return 0;
+}
+
+static int
 md5file(const char *name)
 {
   unsigned long long	cnt;
@@ -283,7 +299,7 @@ md5file(const char *name)
   cnt	= exact;
   err	= 0;
   md5init(0);
-  for (got=0;;)
+  for (got=0;; IGUR(alt && printname(name)))
     {
       if (cnt)
         {
@@ -375,15 +391,7 @@ md5(const char *name)
 {
   if (direct ? md5str(name) : md5file(name))
     return 1;	/* error */
-  if (!quiet)
-    {
-      fputc(' ', out);
-      if (zero)
-        fprintf(out, "%s", name);
-      else
-        shellescapename(name);
-    }
-  term();
+  printname(name);
   return 0;
 }
 
@@ -477,6 +485,12 @@ main(int argc, char **argv)
                       "h	this help"
                       ,
 
+                      TINO_GETOPT_MAX
+                      TINO_GETOPT_FLAG
+                      "a	Write alternate format (diffable etc.)"
+                      , &alt,
+                      2,
+
                       TINO_GETOPT_UNSIGNED
                       TINO_GETOPT_DEFAULT
                       TINO_GETOPT_SUFFIX
@@ -504,11 +518,11 @@ main(int argc, char **argv)
                       "f offset	Start reading at the given offset.  On stdin this skips.\n"
                       "		Errors if there are less bytes or seek() is impossible"
                       , &offset,
-
+/*g*/
                       TINO_GETOPT_FLAG
                       "i	Ignore errors silently"
                       , &ignore,
-
+/*j*/
                       TINO_GETOPT_MAX
                       TINO_GETOPT_FLAG
                       "k	prefix MD5 with blocKnumbers.  Implies -m\n"
@@ -534,7 +548,7 @@ main(int argc, char **argv)
                       "n	read NUL terminated lines\n"
                       "		Note that NUL always acts as line terminator."
                       , &nflag,
-
+/*o*/
                       TINO_GETOPT_STRING
                       "p str	Preset md5 algorithm with given string\n"
                       "		This modifies the md5 algorithm by prefixing str."
@@ -543,7 +557,7 @@ main(int argc, char **argv)
                       TINO_GETOPT_FLAG
                       "q	Quiet mode: do not print (shell escaped) file names"
                       , &quiet,
-
+/*r*/
                       TINO_GETOPT_FLAG
                       "s	read data from Stdin instead, not a file list\n"
                       "		Enables '-' as file argument for stdin, too."
@@ -557,7 +571,7 @@ main(int argc, char **argv)
                       TINO_GETOPT_FLAG
                       "u	Unbuffered output"
                       , &unbuffered,
-
+/*vwxy*/
                       TINO_GETOPT_FLAG
                       "z	Write NUL(\"zero\") terminated lines, disables shell escape"
                       , &zero,
@@ -566,6 +580,9 @@ main(int argc, char **argv)
 
   if (argn<=0)
     return 1;
+
+  if (alt > 1)
+    return md5err("-a format unknown (option given too often?)");
 
   blocknumber	= blocknumbers ? 1 : 0;
   if ((overlap || blocknumbers) && !maxsize)
